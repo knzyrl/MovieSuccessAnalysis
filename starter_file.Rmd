@@ -3,3 +3,21 @@ title: "starter_file"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## TMDB 5000 Movie Dataset: (updated 8 years ago) 
+
+"https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata?resource=download&select=tmdb_5000_movies.csv" 2 
+
+Possible Questions: 
+1. How do movie characteristics such as budget, genre, and runtime influence the financial success and popularity of films? 
+2. Have movies become more financially successful or higher-rated over time, and how do production characteristics like budget and genre contribute to these trends?
+
+```{r}
+movies <- read.csv("tmdb_5000_movies.csv")
+summary(movies)
+
+```
+
