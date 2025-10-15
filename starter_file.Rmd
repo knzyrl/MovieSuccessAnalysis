@@ -1,6 +1,6 @@
 ---
 title: "starter_file"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,9 +15,47 @@ Possible Questions:
 1. How do movie characteristics such as budget, genre, and runtime influence the financial success and popularity of films? 
 2. Have movies become more financially successful or higher-rated over time, and how do production characteristics like budget and genre contribute to these trends?
 
-```{r}
-movies <- read.csv("tmdb_5000_movies.csv")
-summary(movies)
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+## 1  Import and cleaning
+
+```{r import}
+movies <- read_csv("tmdb_5000_movies.csv") %>%
+  mutate(
+    release_year  = as.integer(substr(release_date, 1, 4)),
+    primary_genre = str_extract(
+      genres, '"name":[[:space:]]*"([^"]+)"'
+  )) %>%
+  filter(budget > 0, revenue > 0, !is.na(primary_genre)) %>%
+  mutate(
+    log_budget  = log10(budget),
+    log_revenue = log10(revenue)
+  )
+```
+
+## 2  Quick numerical snapshot
+
+```{r snapshot}
+# Simple numeric summaries
+num_cols <- c("log_budget", "runtime", "popularity", "vote_average", 
+              "vote_count", "release_year")
+movies %>% summarise(across(all_of(num_cols), list(mean = mean, sd = sd, min = min, median = median, max = max)))
+```
+
+## 3  Multiple linear regression
+
+```{r model-fit}
+fit_revenue <- lm(log_revenue ~ log_budget + runtime + primary_genre + release_year + log_budget:primary_genre, data = movies)
+summary(fit_revenue)
+```
+
+## 4  Residual analysis
+
+```{r residual-plots, fig.height=7, fig.width=7}
+plot(fit_revenue)
+```
 
 ```
 
