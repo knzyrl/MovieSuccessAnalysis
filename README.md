@@ -5,21 +5,19 @@ This project explores **what factors contribute to a movie’s financial success
 We use **Multiple Linear Regression (MLR)** to analyze how predictors such as **budget**, **runtime**, **release year**, and **genre** influence  **revenue** and **popularity score**. 
 By applying transformations and residual diagnostics, the analysis examines how production and creative characteristics shape movie performance.
 
----
 
 ## Research Question 
-1. How do movie characteristics influence the financial success and popularity of films?  
+How do movie characteristics influence the financial success and popularity of films?  
 
----
 
 ## Dataset Information  
 - **Source:** [TMDB 5000 Movie Dataset (Kaggle)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata)  
 - **Description:** Contains data for approximately 5,000 movies, including budget, revenue, popularity, runtime, release date, and genre details.  
----
+
 
 ## Analysis Summary   (maybe add a findings section)
 ....
----
+
 
 ## How to Run  
 1. Clone this repository:  
@@ -28,8 +26,10 @@ By applying transformations and residual diagnostics, the analysis examines how 
    ```
 
 ## Contributors
-- **Kevin:** 
-- **Khangerel:**  
-- **Andrew:** 
+- **Kevin** 
+- **Khangerel**  
+- **Andrew** 
+
 
 ## References
+kaggle + "last page in report..."
