@@ -17,45 +17,49 @@ Possible Questions:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(dplyr)
 ```
 
 ## 1  Import and cleaning
 
-```{r import}
+```{r import, message=FALSE}
 movies <- read_csv("tmdb_5000_movies.csv") %>%
   mutate(
     release_year  = as.integer(substr(release_date, 1, 4)),
-    primary_genre = str_extract(
-      genres, '"name":[[:space:]]*"([^"]+)"'
-  )) %>%
-  filter(budget > 0, revenue > 0, !is.na(primary_genre)) %>%
-  mutate(
-    log_budget  = log10(budget),
-    log_revenue = log10(revenue)
-  )
+    primary_genre = stringr::str_match(genres, '"name"\\s*:\\s*"([^"]+)"')[,2],
+    log_budget    = log10(budget),
+    log_revenue   = log10(revenue),
+    is_english    = as.integer(original_language == "en"),       
+    has_homepage  = as.integer(!is.na(homepage) & homepage != "")
+  ) %>%
+  filter(budget > 0, revenue > 0, !is.na(primary_genre))
 ```
 
 ## 2  Quick numerical snapshot
 
 ```{r snapshot}
-# Simple numeric summaries
-num_cols <- c("log_budget", "runtime", "popularity", "vote_average", 
-              "vote_count", "release_year")
-movies %>% summarise(across(all_of(num_cols), list(mean = mean, sd = sd, min = min, median = median, max = max)))
+num_vars <- c("log_budget","runtime","popularity","vote_average",
+              "vote_count","release_year")
+
+num_summary <- movies %>%
+  select(all_of(num_vars)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "x") %>%
+  group_by(variable) %>%
+  summarise(
+    n      = sum(!is.na(x)),
+    mean   = mean(x, na.rm = TRUE),
+    sd     = sd(x, na.rm = TRUE),
+    min    = min(x, na.rm = TRUE),
+    q1     = quantile(x, .25, na.rm = TRUE),
+    median = median(x, na.rm = TRUE),
+    q3     = quantile(x, .75, na.rm = TRUE),
+    max    = max(x, na.rm = TRUE),
+    outliers = {
+      q1_ <- quantile(x, .25, na.rm = TRUE); q3_ <- quantile(x, .75, na.rm = TRUE)
+      iqr_ <- q3_ - q1_; sum(x < (q1_ - 1.5*iqr_) | x > (q3_ + 1.5*iqr_), na.rm = TRUE)
+    }
+  ) %>%
+  mutate(across(where(is.double), ~ round(.x, 2)))
+
+print.data.frame(num_summary, row.names = FALSE)
 ```
-
-## 3  Multiple linear regression
-
-```{r model-fit}
-fit_revenue <- lm(log_revenue ~ log_budget + runtime + primary_genre + release_year + log_budget:primary_genre, data = movies)
-summary(fit_revenue)
-```
-
-## 4  Residual analysis
-
-```{r residual-plots, fig.height=7, fig.width=7}
-plot(fit_revenue)
-```
-
-```
-
