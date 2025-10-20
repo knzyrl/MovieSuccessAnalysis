@@ -27,8 +27,8 @@ movies <- read_csv("tmdb_5000_movies.csv") %>%
   mutate(
     release_year  = as.integer(substr(release_date, 1, 4)),
     primary_genre = stringr::str_match(genres, '"name"\\s*:\\s*"([^"]+)"')[,2],
-    log_budget    = log10(budget),
-    log_revenue   = log10(revenue),
+    budget    = 10(budget),
+    revenue   = 10(revenue),
     is_english    = as.integer(original_language == "en"),       
     has_homepage  = as.integer(!is.na(homepage) & homepage != "")
   ) %>%
@@ -38,7 +38,7 @@ movies <- read_csv("tmdb_5000_movies.csv") %>%
 ## 2  Quick numerical snapshot
 
 ```{r snapshot}
-num_vars <- c("log_budget","runtime","popularity","vote_average",
+num_vars <- c("budget","runtime","popularity","vote_average",
               "vote_count","release_year")
 
 num_summary <- movies %>%
@@ -67,8 +67,8 @@ print.data.frame(num_summary, row.names = FALSE)
 ## 3  Multiple linear regression
 
 ```{r model-fit}
-fit_revenue <- lm(log_revenue ~ log_budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage +
-primary_genre + log_budget:primary_genre, data = movies)
+fit_revenue <- lm(revenue ~ budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage +
+primary_genre + budget:primary_genre, data = movies)
 summary(fit_revenue)
 ```
 
