@@ -63,3 +63,17 @@ num_summary <- movies %>%
 
 print.data.frame(num_summary, row.names = FALSE)
 ```
+
+## 3  Multiple linear regression
+
+```{r model-fit}
+fit_revenue <- lm(log_revenue ~ log_budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage +
+primary_genre + log_budget:primary_genre, data = movies)
+summary(fit_revenue)
+```
+
+## 4  Residual analysis
+
+```{r residual-plots, fig.height=7, fig.width=7}
+plot(fit_revenue)
+```
