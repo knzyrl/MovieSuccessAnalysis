@@ -1,0 +1,80 @@
+---
+title: "Preliminary Model: Analyzing Movie Revenue "
+author: "Andrew Batmunkh, Khangerel Batzul, Kevin Cheung"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dplyr)
+```
+
+## Data Source
+
+TMDB 5000 Movie Dataset (Kaggle)  
+URL: https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata?resource=download&select=tmdb_5000_movies.csv
+
+## 1. Import and Cleaning
+
+```{r import, message=FALSE}
+movies <- read_csv("tmdb_5000_movies.csv") %>%
+  mutate(
+    release_year  = as.integer(substr(release_date, 1, 4)),
+    primary_genre = stringr::str_match(genres, '"name"\\s*:\\s*"([^"]+)"')[,2],
+    is_english    = as.integer(original_language == "en"),       
+    has_homepage  = as.integer(!is.na(homepage) & homepage != "")
+  ) %>%
+  filter(budget > 0, revenue > 0, !is.na(primary_genre))
+```
+
+## 2. Numerical Summary 
+
+```{r snapshot}
+num_vars <- c("budget","runtime","popularity","vote_average",
+              "vote_count","release_year")
+
+num_summary <- movies %>%
+  select(all_of(num_vars)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "x") %>%
+  group_by(variable) %>%
+  summarise(
+    n      = sum(!is.na(x)),
+    mean   = mean(x, na.rm = TRUE),
+    sd     = sd(x, na.rm = TRUE),
+    min    = min(x, na.rm = TRUE),
+    q1     = quantile(x, .25, na.rm = TRUE),
+    median = median(x, na.rm = TRUE),
+    q3     = quantile(x, .75, na.rm = TRUE),
+    max    = max(x, na.rm = TRUE),
+    outliers = {
+      q1_ <- quantile(x, .25, na.rm = TRUE); q3_ <- quantile(x, .75, na.rm = TRUE)
+      iqr_ <- q3_ - q1_; sum(x < (q1_ - 1.5*iqr_) | x > (q3_ + 1.5*iqr_), na.rm = TRUE)
+    }
+  ) %>%
+  mutate(across(where(is.double), ~ round(.x, 2)))
+
+print.data.frame(num_summary, row.names = FALSE)
+
+cat("\nCategorical Variable Frequencies:\n")
+table(movies$primary_genre)
+table(movies$is_english)
+table(movies$has_homepage)
+```
+
+## 3. Preliminary Multiple Linear Regression Model
+
+```{r model-fit}
+fit_revenue <- lm(revenue ~ budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage +
+primary_genre + budget:primary_genre, data = movies)
+
+summary(fit_revenue)
+```
+
+## 4. Residual Analysis
+
+```{r residual-plots, fig.height=7, fig.width=7}
+plot(fit_revenue)
+```
