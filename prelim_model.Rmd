@@ -10,12 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(dplyr)
+library(knitr)
 ```
 
 ## Data Source
 
 TMDB 5000 Movie Dataset (Kaggle)  
-URL: https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata?resource=download&select=tmdb_5000_movies.csv
+URL: https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata
 
 ## 1. Import and Cleaning
 
@@ -28,13 +29,15 @@ movies <- read_csv("tmdb_5000_movies.csv") %>%
     has_homepage  = as.integer(!is.na(homepage) & homepage != "")
   ) %>%
   filter(budget > 0, revenue > 0, !is.na(primary_genre))
+
+cat("Cleaned dataset contains", nrow(movies), "observations and", 
+    ncol(movies), "variables.\n")
 ```
 
 ## 2. Numerical Summary 
 
-```{r snapshot}
-num_vars <- c("budget","runtime","popularity","vote_average",
-              "vote_count","release_year")
+```{r summary}
+num_vars <- c("budget","runtime","popularity","vote_average", "vote_count","release_year")
 
 num_summary <- movies %>%
   select(all_of(num_vars)) %>%
@@ -57,24 +60,28 @@ num_summary <- movies %>%
   mutate(across(where(is.double), ~ round(.x, 2)))
 
 print.data.frame(num_summary, row.names = FALSE)
+```
 
-cat("\nCategorical Variable Frequencies:\n")
+```{r categorical-summary}
+cat("\nPrimary Genre Distribution:\n")  
 table(movies$primary_genre)
+cat("\n\nEnglish Language Movies:\n") 
 table(movies$is_english)
+cat("\n\nMovies with Homepage:\n")  
 table(movies$has_homepage)
 ```
 
 ## 3. Preliminary Multiple Linear Regression Model
 
 ```{r model-fit}
-fit_revenue <- lm(revenue ~ budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage +
-primary_genre + budget:primary_genre, data = movies)
+fit_revenue <- lm(revenue ~ budget + runtime + popularity + vote_average + vote_count + release_year + is_english + has_homepage + primary_genre + budget:primary_genre, data = movies)
 
 summary(fit_revenue)
 ```
 
 ## 4. Residual Analysis
 
-```{r residual-plots, fig.height=7, fig.width=7}
+```{r residual-plots, fig.height=8, fig.width=8}
+par(mfrow = c(2,2))
 plot(fit_revenue)
 ```
